@@ -1,8 +1,8 @@
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain.prompts import ChatPromptTemplate
 
-llm = ChatOpenAI(temperature=0, model="gpt-4")
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0)
 
 skills_schema = ResponseSchema(
     name="skills",
@@ -56,18 +56,18 @@ output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
 format_instructions = output_parser.get_format_instructions()
 template=(
         """Evaluate the relevance of the following resume to the job description
-           and provide detailed feedback\n
-           Resume: {resume}\n\n
-           Job Description: {job_description}\n\n
-           {format_instructions}\nreturn the json only without additional paragraphs"""
+            and provide detailed feedback\n
+            Resume: {resume}\n\n
+            Job Description: {job_description}\n\n
+            {format_instructions}\nreturn the json only without additional paragraphs"""
     )
 prompt = ChatPromptTemplate.from_template(template=template)
 
 def evaluate_resume(resume: str, job_description: str)-> dict:
     messages = prompt.format_messages(resume=resume, 
-                                      job_description=job_description,
-                                      format_instructions=format_instructions
-                                      )
+                                        job_description=job_description,
+                                        format_instructions=format_instructions
+                                        )
     response = llm.invoke(messages)
     output_dict = output_parser.parse(response.content)
     return output_dict

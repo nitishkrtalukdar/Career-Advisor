@@ -1,4 +1,4 @@
-from langchain_ollama import OllamaLLM
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
 template = (
@@ -13,9 +13,9 @@ template = (
     "The question: <<{query}>>"
 )
 
-model = OllamaLLM(model='llama3.1')
+model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
 
-def parse_with_ollama(chunks, query):
+def parse_with_gemini(chunks, query):
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | model
 
@@ -24,6 +24,5 @@ def parse_with_ollama(chunks, query):
     for i, chunk in enumerate(chunks, start=1):
         response = chain.invoke({"body_content": chunk, "query": query})
         print(f"Parsed batch {i} of {len(chunks)}")
-        parsed_result.append(response)
+        parsed_result.append(response.content) # Add .content for Gemini
     return "\n".join(parsed_result)
-

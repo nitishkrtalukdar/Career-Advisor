@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 import streamlit as st
 from typing import ContextManager
 from langchain_community.document_loaders import PyPDFLoader
@@ -6,11 +8,20 @@ from chat_agent import call_chat_agent
 import plotly.graph_objects as go
 
 st.set_page_config(
-    page_title="ApplyPal",
+    page_title="Interview Prep | CareeroAI",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# ADD THIS NEW HELPER FUNCTION
+def stream_gemini_response(stream):
+    for chunk in stream:
+        try:
+            yield chunk.text
+        except Exception:
+            # Handle potential errors if a chunk has no text
+            continue
 
 def update_history():
     if st.session_state.job_text != '':
@@ -87,43 +98,48 @@ def display_evaluation(container: ContextManager) -> None:
                     else:
                         st.write("No negative points.")
 
-def run_chat_agent(resume: str, job_description: str):
-    if "messages" not in st.session_state:
-        st.session_state.messages = [
-            {
-                "role": "system",
-                "content": f"""
-                You are a career advisor for a candidate with the resume delimited by <<<>>> and the job description delimited by ((( ))).
-                Resume:
-                <<<
-                {resume}
-                >>>
-                Job description:
-                (((
-                {job_description}
-                )))
-                Answer the questions giving the given information only. If the candidate asks a question that you don't have an answer to, say that you don't know the answer.
-                """
-            }
-        ]
 
-    # Display chat messages from history on app rerun
+# Replace the old run_chat_agent function with this one
+# In main.py, replace your existing function with this one
+
+# In main.py, replace the entire function with this version
+
+# In main.py, ensure your run_chat_agent function looks like this
+
+def run_chat_agent(resume: str, job_description: str):
+    system_prompt = f"""
+    You are a career advisor for a candidate with the resume delimited by <<<>>> and the job description delimited by ((( ))).
+    Resume:
+    <<<
+    {resume}
+    >>>
+    Job description:
+    (((
+    {job_description}
+    )))
+    Answer the questions giving the given information only. If the candidate asks a question that you don't have an answer to, say that you don't know the answer.
+    """
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
     message_container = st.container(height=600)
     for message in st.session_state.messages:
-        if message["role"] != "system":
-            message_container.chat_message(message["role"]).write(message["content"])
+        if message.get("role") != "system":
+            role = "assistant" if message.get("role") == "model" else message.get("role")
+            message_container.chat_message(role).write(message.get("content"))
 
-    # Accept user input
     if prompt := st.chat_input("How can I help you?"):
-        # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-        # Display user message in chat message container
         message_container.chat_message("user").write(prompt)
 
-        # Display assistant response in chat message container
-        stream = call_chat_agent(st.session_state.messages)
-        response = message_container.chat_message("assistant").write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        messages_to_send = [msg for msg in st.session_state.messages if msg.get("role") != "system"]
+        
+        stream = call_chat_agent(messages_to_send, system_prompt)
+        response = message_container.chat_message("assistant").write_stream(stream_gemini_response(stream))
+        
+        # This line is correct and essential
+        st.session_state.messages.append({"role": "model", "content": response})
 
 def retrieve_job_history(job_history: str) -> None:
     update_history()
@@ -131,7 +147,8 @@ def retrieve_job_history(job_history: str) -> None:
     if 'evaluation' in job_history:
         st.session_state.evaluation = job_history.get('evaluation')
     if "messages" in job_history:
-        st.session_state.messages = job_history.get('messages')
+        loaded_messages = job_history.get('messages')
+        st.session_state.messages =  [msg for msg in loaded_messages if msg.get("role") != "system"]
 
 if "job_text" not in st.session_state:
     st.session_state.job_text = ""
@@ -152,7 +169,7 @@ with st.sidebar:
 left_section, right_section = st.columns(2)
 
 with left_section:
-    st.title("ApplyPal 🧠")
+    st.title("🧐 Interview Prep for College Students")
 
     resume = st.file_uploader("Upload your resume", type=["pdf"])
 
