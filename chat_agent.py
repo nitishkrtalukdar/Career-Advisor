@@ -6,7 +6,7 @@ import os
 genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
 
 def call_chat_agent(messages: list, system_prompt: str):
-    model = genai.GenerativeModel('gemini-1.5-pro-latest',
+    model = genai.GenerativeModel('gemini-2.5-flash',
                                   system_instruction=system_prompt)
     
     # --- THIS IS THE NEW, CRITICAL FIX ---

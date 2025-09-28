@@ -6,7 +6,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.exceptions import OutputParserException
 
 def get_career_suggestions(survey_data: dict):
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.5)
 
     json_format = """
     {{

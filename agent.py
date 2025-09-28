@@ -13,7 +13,7 @@ template = (
     "The question: <<{query}>>"
 )
 
-model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
+model = ChatGoogleGenerativeAI(model="gemini-2.5-pro")
 
 def parse_with_gemini(chunks, query):
     prompt = ChatPromptTemplate.from_template(template)
